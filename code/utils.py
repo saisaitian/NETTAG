@@ -288,3 +288,40 @@ def BuildIntegratedScore(all_genes, feature_score):
     final_score = normalized_feat_score.sum(axis = 1)
 
     return all_genes, final_score
+
+
+
+
+def null_dist_score1(non_snp_genes, rand_num, node_num, curr_gene, cluster_results):
+    rand_gene_score = []
+    gene_clust = set(cluster_results[curr_gene])
+    temp_non_snp_genes = non_snp_genes - set(curr_gene)
+    for _ in range(rand_num):
+        rand_set = random.sample(list(temp_non_snp_genes), node_num)
+        rand_score = 0.0
+        for rg in rand_set:
+            rg_clust = set(cluster_results[rg])
+            if len(rg_clust) > 0 and len(gene_clust) > 0:
+                rand_score += len(gene_clust.intersection(rg_clust)) / len(rg_clust)
+        rand_gene_score.append(rand_score)
+    rand_mean = np.array(rand_gene_score).mean()
+    rand_std = np.array(rand_gene_score).std()
+    return rand_mean, rand_std
+
+
+def FilterLCC(dir_lcc, all_genes, integrated_score):
+
+    with open(dir_lcc, 'rb') as handle:
+        lcc = pickle.load(handle)
+    handle.close()
+
+    filter_genes = []
+    filter_score = []
+
+    for gene, score in zip(all_genes, integrated_score):
+        if int(gene) in lcc:
+            filter_genes.append(int(gene))
+            filter_score.append(score)
+
+
+    return filter_genes, filter_score
